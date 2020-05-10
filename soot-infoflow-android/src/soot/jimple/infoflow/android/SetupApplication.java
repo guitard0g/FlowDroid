@@ -61,7 +61,6 @@ import soot.jimple.infoflow.android.data.parsers.PermissionMethodParser;
 import soot.jimple.infoflow.android.entryPointCreators.AndroidEntryPointCreator;
 import soot.jimple.infoflow.android.entryPointCreators.components.ComponentEntryPointCollection;
 import soot.jimple.infoflow.android.iccta.IccInstrumenter;
-import soot.jimple.infoflow.android.iccta.IccResults;
 import soot.jimple.infoflow.android.manifest.ProcessManifest;
 import soot.jimple.infoflow.android.resources.ARSCFileParser;
 import soot.jimple.infoflow.android.resources.ARSCFileParser.AbstractResource;
@@ -415,9 +414,15 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 			throw new RuntimeException(
 					String.format("Target APK file %s does not exist", targetAPK.getCanonicalPath()));
 
+		// Parse the resource file
+		long beforeARSC = System.nanoTime();
+		this.resources = new ARSCFileParser();
+		this.resources.parse(targetAPK.getAbsolutePath());
+		logger.info("ARSC file parsing took " + (System.nanoTime() - beforeARSC) / 1E9 + " seconds");
+
 		// To look for callbacks, we need to start somewhere. We use the Android
 		// lifecycle methods for this purpose.
-		this.manifest = new ProcessManifest(targetAPK);
+		this.manifest = new ProcessManifest(targetAPK, resources);
 		SystemClassHandler.v().setExcludeSystemComponents(config.getIgnoreFlowsInSystemPackages());
 		Set<String> entryPoints = manifest.getEntryPointClasses();
 		this.entrypoints = new HashSet<>(entryPoints.size());
@@ -426,12 +431,6 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 			if (sc != null)
 				this.entrypoints.add(sc);
 		}
-
-		// Parse the resource file
-		long beforeARSC = System.nanoTime();
-		this.resources = new ARSCFileParser();
-		this.resources.parse(targetAPK.getAbsolutePath());
-		logger.info("ARSC file parsing took " + (System.nanoTime() - beforeARSC) / 1E9 + " seconds");
 	}
 
 	/**
@@ -1498,6 +1497,8 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 			InfoflowResults lastResults = resultAggregator.getLastResults();
 			if (lastResults != null) {
 				InfoflowPerformanceData perfData = lastResults.getPerformanceData();
+				if (perfData == null)
+					lastResults.setPerformanceData(perfData = new InfoflowPerformanceData());
 				perfData.setCallgraphConstructionSeconds((int) callbackDuration);
 				perfData.setTotalRuntimeSeconds((int) Math.round((System.nanoTime() - beforeEntryPoint) / 1E9));
 			}
@@ -1585,8 +1586,10 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 			public InfoflowResults onResultsAvailable(InfoflowResults results, IInfoflowCFG cfg) {
 				// Purify the ICC results if requested
 				final IccConfiguration iccConfig = config.getIccConfig();
-				if (iccConfig.isIccResultsPurifyEnabled())
-					results = IccResults.clean(cfg, results);
+				if (iccConfig.isIccResultsPurifyEnabled()) {
+					// no-op at the moment. We used to have a purifier here, but it didn't make
+					// any sense. Removed it for the better.
+				}
 
 				return results;
 			}
@@ -1656,7 +1659,9 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 
 	/**
 	 * Creates a new instance of the entry point creator
-	 * @param components The components for which the entry point creator shallk be responsible
+	 * 
+	 * @param components The components for which the entry point creator shallk be
+	 *                   responsible
 	 * @return The new instance of the entry point creator
 	 */
 	protected AndroidEntryPointCreator createEntryPointCreator(Set<SootClass> components) {

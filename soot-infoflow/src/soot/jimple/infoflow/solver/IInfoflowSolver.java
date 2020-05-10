@@ -122,4 +122,17 @@ public interface IInfoflowSolver {
 	 */
 	public void setMaxAbstractionPathLength(int maxAbstractionPathLength);
 
+	/**
+	 * Sets the peer group in which this solver operates. Peer groups allow for
+	 * synchronization between solvers
+	 * 
+	 * @param solverPeerGroup The solver peer group
+	 */
+	public void setPeerGroup(SolverPeerGroup solverPeerGroup);
+
+	/**
+	 * Notifies the solver that no further edges will be scheduled
+	 */
+	public void terminate();
+
 }

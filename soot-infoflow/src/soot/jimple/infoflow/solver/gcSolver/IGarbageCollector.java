@@ -39,4 +39,19 @@ public interface IGarbageCollector<N, D> {
 	 */
 	public int getGcedMethods();
 
+	/**
+	 * Gets the number of taint abstractions that were removed during garbage
+	 * collection
+	 * 
+	 * @return The number of taint abstractions that were removed during garbage
+	 *         collection
+	 */
+	public int getGcedEdges();
+
+	/**
+	 * Notifies the garbage collector that the IFDS solver has finished propagating
+	 * its edges
+	 */
+	public void notifySolverTerminated();
+
 }

@@ -57,6 +57,14 @@ public class InfoflowSolver extends IFDSSolver<Unit, Abstraction, BiDiInterproce
 
 	@Override
 	public boolean processEdge(PathEdge<Unit, Abstraction> edge) {
+		// We might not have a garbage collector yet
+		if (this.garbageCollector == null) {
+			synchronized (this) {
+				if (this.garbageCollector == null)
+					this.garbageCollector = createGarbageCollector();
+			}
+		}
+
 		propagate(edge.factAtSource(), edge.getTarget(), edge.factAtTarget(), null, false);
 		return true;
 	}
@@ -119,7 +127,8 @@ public class InfoflowSolver extends IFDSSolver<Unit, Abstraction, BiDiInterproce
 
 	@Override
 	public Set<Pair<Unit, Abstraction>> endSummary(SootMethod m, Abstraction d3) {
-		return super.endSummary(m, d3);
+		Map<Pair<Unit, Abstraction>, Abstraction> map = super.endSummaryMap(m, d3);
+		return map == null ? null : map.keySet();
 	}
 
 	@Override
@@ -132,7 +141,7 @@ public class InfoflowSolver extends IFDSSolver<Unit, Abstraction, BiDiInterproce
 			final Abstraction d2 = edge.factAtTarget();
 
 			final SootMethod methodThatNeedsSummary = icfg.getMethodOf(u);
-			final Map<Unit, Map<Abstraction, Abstraction>> inc = incoming(d1, methodThatNeedsSummary);
+			final Set<IncomingRecord<Unit, Abstraction>> inc = incoming(d1, methodThatNeedsSummary);
 
 			if (inc == null || inc.isEmpty())
 				followReturnsPastSeedsHandler.handleFollowReturnsPastSeeds(d1, u, d2);

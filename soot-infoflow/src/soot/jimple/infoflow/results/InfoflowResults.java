@@ -51,6 +51,9 @@ public class InfoflowResults {
 	private volatile List<String> exceptions = null;
 	private int terminationState = TERMINATION_SUCCESS;
 
+	public InfoflowResults() {
+	}
+
 	/**
 	 * Gets the exceptions that have happened during the data flow analysis. This
 	 * collection is immutable.
@@ -75,10 +78,6 @@ public class InfoflowResults {
 			}
 		}
 		exceptions.add(ex);
-	}
-
-	public InfoflowResults() {
-
 	}
 
 	/**
@@ -231,7 +230,9 @@ public class InfoflowResults {
 	 * @param results The data structure from which to copy the results
 	 */
 	public void addAll(InfoflowResults results) {
-		if (results == null || results.isEmpty())
+		// We must also accept empty result objects, because even though they do not
+		// contain any data flows, they may still contain performance data.
+		if (results == null)
 			return;
 
 		if (results.getExceptions() != null) {
@@ -239,7 +240,7 @@ public class InfoflowResults {
 				addException(e);
 		}
 
-		if (!results.getResults().isEmpty()) {
+		if (!results.isEmpty() && !results.getResults().isEmpty()) {
 			for (ResultSinkInfo sink : results.getResults().keySet())
 				for (ResultSourceInfo source : results.getResults().get(sink))
 					addResult(sink, source);
@@ -252,6 +253,9 @@ public class InfoflowResults {
 			else
 				this.performanceData.add(results.performanceData);
 		}
+
+		// We aggregate all individual states rather than just taking the best one
+		this.terminationState |= results.terminationState;
 	}
 
 	/**
@@ -493,6 +497,22 @@ public class InfoflowResults {
 	 */
 	public void setPerformanceData(InfoflowPerformanceData performanceData) {
 		this.performanceData = performanceData;
+	}
+
+	/**
+	 * Adds the given performance data to this result object
+	 * 
+	 * @param performanceData The performance data to add
+	 */
+	public void addPerformanceData(InfoflowPerformanceData performanceData) {
+		// don't duplicate performance data
+		if (performanceData == this.performanceData)
+			return;
+
+		if (this.performanceData == null)
+			this.performanceData = performanceData;
+		else
+			this.performanceData.add(performanceData);
 	}
 
 	@Override
