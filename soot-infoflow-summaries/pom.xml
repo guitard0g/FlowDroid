@@ -144,7 +144,7 @@
 		<dependency>
 			<groupId>de.tud.sse</groupId>
 			<artifactId>soot-infoflow</artifactId>
-			<version>2.7.3-SNAPSHOT</version>
+			<version>LOCAL-SNAPSHOT</version>
 
 			<exclusions>
 				<exclusion>
@@ -160,7 +160,7 @@
 		<dependency>
 			<groupId>de.tud.sse</groupId>
 			<artifactId>soot-infoflow</artifactId>
-			<version>2.7.3-SNAPSHOT</version>
+			<version>LOCAL-SNAPSHOT</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 			

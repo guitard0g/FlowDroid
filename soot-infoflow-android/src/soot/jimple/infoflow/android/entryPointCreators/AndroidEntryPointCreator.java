@@ -36,14 +36,7 @@ import soot.jimple.NopStmt;
 import soot.jimple.NullConstant;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.android.entryPointCreators.AndroidEntryPointUtils.ComponentType;
-import soot.jimple.infoflow.android.entryPointCreators.components.AbstractComponentEntryPointCreator;
-import soot.jimple.infoflow.android.entryPointCreators.components.ActivityEntryPointCreator;
-import soot.jimple.infoflow.android.entryPointCreators.components.BroadcastReceiverEntryPointCreator;
-import soot.jimple.infoflow.android.entryPointCreators.components.ComponentEntryPointCollection;
-import soot.jimple.infoflow.android.entryPointCreators.components.ContentProviderEntryPointCreator;
-import soot.jimple.infoflow.android.entryPointCreators.components.FragmentEntryPointCreator;
-import soot.jimple.infoflow.android.entryPointCreators.components.ServiceConnectionEntryPointCreator;
-import soot.jimple.infoflow.android.entryPointCreators.components.ServiceEntryPointCreator;
+import soot.jimple.infoflow.android.entryPointCreators.components.*;
 import soot.jimple.infoflow.android.manifest.ProcessManifest;
 import soot.jimple.infoflow.cfg.LibraryClassPatcher;
 import soot.jimple.infoflow.data.SootMethodAndClass;
@@ -333,7 +326,7 @@ public class AndroidEntryPointCreator extends AbstractAndroidEntryPointCreator i
 		for (SootClass currentClass : components) {
 			// Is this the application class?
 			if (entryPointUtils.isApplicationClass(currentClass) && currentClass.getName().equals(applicationName)) {
-				if (applicationClass != null && currentClass != applicationClass)
+				if (applicationClass != null && !currentClass.getName().equals(applicationClass.getName()))
 					throw new RuntimeException("Multiple application classes in app");
 				applicationClass = currentClass;
 				break;
